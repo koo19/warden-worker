@@ -46,7 +46,7 @@ run_worker_first = ["/api/*", "/identity/*"]
 # Server-side password hashing PBKDF2 iterations (stored per-user).
 # Defaults to 600000, and will be clamped to a minimum of 600000 even if set lower.
 # Existing users whose password iterations are less than this value will be upgraded on login.
-# PASSWORD_ITERATIONS = "600000"
+PASSWORD_ITERATIONS = "1800000"
 
 # Optional: Set the batch size for imports. Defaults to 30 if not set.
 # Set to 0 means no batching (all records imported in a single batch).
@@ -56,7 +56,7 @@ run_worker_first = ["/api/*", "/identity/*"]
 # If enabled, fetch cipher JSON per-row and build the JSON array in the Worker
 # to avoid D1/SQLite `SQLITE_TOOBIG` errors on very large vaults.
 # Defaults to false (use `json_group_array` and fallback automatically on `SQLITE_TOOBIG`).
-# CIPHERS_DEFAULT_ROW_QUERY = "true"
+CIPHERS_DEFAULT_ROW_QUERY = "true"
 
 # Optional: preallocate the `/api/sync` response String capacity (bytes).
 # If unset/invalid, the Worker uses a default capacity and grows as needed.
@@ -69,11 +69,11 @@ run_worker_first = ["/api/*", "/identity/*"]
 # Attachment configuration (optional)
 # Maximum size for individual attachment files in bytes.
 # Defaults to no limit if not set.
-# ATTACHMENT_MAX_BYTES = "104857600"  # 100MB
+ATTACHMENT_MAX_BYTES = "1048576000"  # 1000MB
 
 # Maximum total attachment storage per user in KB.
 # Defaults to no limit if not set.
-# ATTACHMENT_TOTAL_LIMIT_KB = "1048576"  # 1GB
+ATTACHMENT_TOTAL_LIMIT_KB = "2097152"  # 2GB
 
 # Number of seconds to keep attachment upload and download URLs valid.
 # Defaults to 300 seconds (5 minutes) if not set.
@@ -85,24 +85,39 @@ run_worker_first = ["/api/*", "/identity/*"]
 crons = ["0 3 * * *"]
 
 [[d1_databases]]
-binding = "vault1"
-database_name = "vault1"
-database_id = "${D1_DATABASE_ID}"
+binding = "wardenvault"
+database_name = "wardenvault"
+# database_id = "${D1_DATABASE_ID}"
 migrations_dir = "migrations"
 
 # R2 bucket for file attachments (optional, requires credit card)
 # R2 has priority: if R2 is configured, KV is ignored.
 # R2 supports larger files and streaming uploads.
 # Uncomment and configure this section to enable file attachments via R2:
-# [[r2_buckets]]
-# binding = "ATTACHMENTS_BUCKET"
-# bucket_name = "warden-attachments"
+[[r2_buckets]]
+binding = "ATTACHMENTS_BUCKET"
+bucket_name = "warden-attachments"
 
 # KV namespace for file attachments (optional, no credit card required)
 # KV has a 25MB limit per file, but doesn't require credit card binding.
 # If R2 is not configured, KV will be used for attachments.
-[[kv_namespaces]]
-binding = "ATTACHMENTS_KV"
+# [[kv_namespaces]]
+# binding = "ATTACHMENTS_KV"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
 
 [env.dev]
 name = "warden-worker-dev"
